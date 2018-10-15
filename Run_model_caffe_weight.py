@@ -16,11 +16,13 @@ def detectFace(img, threshold):
 
     caffe_img = (img.copy() - 127.5) / 127.5
     origin_h, origin_w, ch = caffe_img.shape
+    # 调整图片尺寸
     scales = tools.calculateScales(img)
     out = []
     t0 = time.time()
     # del scales[:4]
 
+    # 每个尺寸都放入Pnet
     for scale in scales:
         hs = int(origin_h * scale)
         ws = int(origin_w * scale)
@@ -102,28 +104,37 @@ def detectFace(img, threshold):
 threshold = [0.6,0.6,0.7]
 # video_path = 'WalmartArguments_p1.mkv'
 # cap = cv2.VideoCapture(video_path)
+camera = cv2.VideoCapture(0)
 
-while (True):
-    # ret, img = cap.read()
-    img = cv2.imread('000001.png')
+while True:
+    ret, frame = camera.read()
+    #img = frame
+    img = cv2.resize(frame, (0, 0), fx=0.5, fy=0.5)
 
+    # 检测
     rectangles = detectFace(img, threshold)
     draw = img.copy()
 
     for rectangle in rectangles:
         if rectangle is not None:
+            # 矩形 padding
             W = -int(rectangle[0]) + int(rectangle[2])
             H = -int(rectangle[1]) + int(rectangle[3])
             paddingH = 0.01 * W
             paddingW = 0.02 * H
+
+            # 判断矩形的有效性
             crop_img = img[int(rectangle[1]+paddingH):int(rectangle[3]-paddingH), int(rectangle[0]-paddingW):int(rectangle[2]+paddingW)]
             crop_img = cv2.cvtColor(crop_img, cv2.COLOR_RGB2GRAY)
             if crop_img is None:
                 continue
             if crop_img.shape[0] < 0 or crop_img.shape[1] < 0:
                 continue
-            cv2.rectangle(draw, (int(rectangle[0]), int(rectangle[1])), (int(rectangle[2]), int(rectangle[3])), (255, 0, 0), 1)
 
+            # 绘制脸部矩形框
+            cv2.rectangle(draw, (int(rectangle[0]), int(rectangle[1])), (int(rectangle[2]), int(rectangle[3])), (255, 0, 0), 3)
+
+            # 绘制5个特征点
             for i in range(5, 15, 2):
                 cv2.circle(draw, (int(rectangle[i + 0]), int(rectangle[i + 1])), 2, (0, 255, 0))
     cv2.imshow("test", draw)

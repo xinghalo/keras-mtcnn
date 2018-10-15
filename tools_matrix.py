@@ -214,6 +214,15 @@ Output:
     scales  : Multi-scale
 '''
 def calculateScales(img):
+    """
+    图像金字塔
+
+    1 宽度高度标准化到最小尺寸500
+    2 图像金字塔
+
+    :param img:
+    :return:
+    """
     caffe_img = img.copy()
     pr_scale = 1.0
     h,w,ch = caffe_img.shape
@@ -227,6 +236,7 @@ def calculateScales(img):
         h = int(h*pr_scale)
 
     #multi-scale
+    # 计算尺寸，每次缩小0.709
     scales = []
     factor = 0.709
     factor_count = 0
